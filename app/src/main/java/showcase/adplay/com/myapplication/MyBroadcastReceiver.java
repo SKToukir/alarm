@@ -9,30 +9,37 @@ import android.media.MediaPlayer;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 /**
  * Created by toukirul on 20/7/2017.
  */
 public class MyBroadcastReceiver extends BroadcastReceiver {
 
     static MediaPlayer mp;
-    int i =0;
+    static int i = 0;
+
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        mp=MediaPlayer.create(context, R.raw.old);
+        mp = MediaPlayer.create(context, R.raw.old);
         mp.start();
-        MainActivity.setTime.remove(i);
-        if (MainActivity.setTime.size()!=0) {
-            i++;
-            setAgai(context, MainActivity.setTime.get(i));
+
+        ArrayList<String> timeList = SharedPref.getList(context);
+
+        if (timeList.size() > 0){
+            setAgai(context, Long.parseLong(timeList.get(i)));
             Toast.makeText(context, "Alarm....", Toast.LENGTH_LONG).show();
+            timeList.remove(i);
+            SharedPref.clearListShared(context);
+            SharedPref.SaveList(context,timeList);
+        }else {
+            MyBroadcastReceiver.this.abortBroadcast();
         }
     }
 
-    public void setAgai(Context context, int time){
-        Log.d("timelist+1",String.valueOf(MainActivity.setTime.get(0)));
-        MainActivity.setTime.remove(0);
-        Log.d("timelist+2",String.valueOf(MainActivity.setTime.get(0)));
+    public void setAgai(Context context, long time){
+        Log.d("timelist+1",String.valueOf(SharedPref.getList(context).get(i)));
         Intent intent = new Intent(context, MyBroadcastReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context, 234324243, intent, 0);
@@ -40,8 +47,7 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 
 //        for (int u = 0; u < time.length; u++) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
-                + (time * 1000), pendingIntent);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, time, pendingIntent);
         Toast.makeText(context, "Alarm set in " + time + " seconds", Toast.LENGTH_LONG).show();
     }
 }

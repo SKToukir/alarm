@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
-    static ArrayList<Integer> setTime = new ArrayList<>();
+    static ArrayList<String> setTime = new ArrayList<>();
     PendingIntent pendingIntent;
     AlarmManager alarmManager;
     private Context context;
@@ -31,36 +31,44 @@ public class MainActivity extends AppCompatActivity {
         context = this;
         b1 = (Button) findViewById(R.id.button1);
 
+
         b1.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
 
-                setTime.add(6);
-                setTime.add(60);
-                setTime.add(10);
+                setTime.add(new AlarmTimeClass().getDateTimeInmilSec(timeFormat("Jul 23 2017 11:34AM")));
+                setTime.add(new AlarmTimeClass().getDateTimeInmilSec(timeFormat("Jul 23 2017 11:35AM")));
+                setTime.add(new AlarmTimeClass().getDateTimeInmilSec(timeFormat("Jul 23 2017 11:38AM")));
+                setTime.add(new AlarmTimeClass().getDateTimeInmilSec(timeFormat("Jul 23 2017 11:39AM")));
 
-                startAlert(setTime,context);
+                SharedPref.SaveList(MainActivity.this,setTime);
+
+                ArrayList<String> l = SharedPref.getList(getApplicationContext());
+
+                for (int i = 0; i < l.size(); i++){
+                    Log.d("itemlist",l.get(i));
+                }
+                startAlert(l, context);
             }
         });
 
     }
 
-    public void startAlert(ArrayList<Integer>  time, Context context) {
-        //EditText text = (EditText) findViewById(R.id.time);
-        //int i = Integer.parseInt(text.getText().toString());
+    public void startAlert(ArrayList<String> time, Context context) {
+        Log.d("timelist",String.valueOf(time.get(0)));
         Intent intent = new Intent(context, MyBroadcastReceiver.class);
         pendingIntent = PendingIntent.getBroadcast(
                 context, 234324243, intent, 0);
 
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, Long.parseLong(time.get(0)), pendingIntent);
+        Toast.makeText(this, "Alarm set in " + Long.parseLong(time.get(0)) + " seconds", Toast.LENGTH_LONG).show();
+        setTime.remove(0);
+        SharedPref.clearListShared(context);
+        SharedPref.SaveList(context,setTime);
 
-//        for (int u = 0; u < time.length; u++) {
-            alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-            alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
-                    + (time.get(0) * 1000), pendingIntent);
-            Toast.makeText(this, "Alarm set in " + 7 + " seconds", Toast.LENGTH_LONG).show();
-        //}
     }
 
 
@@ -115,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        format = new SimpleDateFormat("yyyy-MM-dd");
+        format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         String date = format.format(newDate);
 
         Log.d("dateyear", date);
@@ -124,6 +132,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void stopAlarm(View view) {
-      alarmManager.cancel(pendingIntent);
+        alarmManager.cancel(pendingIntent);
     }
 }
